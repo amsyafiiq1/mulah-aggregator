@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Headlines Viewer</title>
+    <style>
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Headlines Viewer</h1>
+
+    <div class="controls">
+      <button onclick="prevPage()" id="prevButton">Previous</button>
+      <span>Page: <span id="currentPage">1</span></span>
+      <button onclick="nextPage()" id="nextButton">Next</button>
+    </div>
+
+    <div id="headlines"></div>
+
+    <script>
+      let currentPage = 1;
+
+      async function fetchHeadlines(page) {
+        try {
+          const response = await fetch(
+            `http://localhost:4200/api/headlines?page=${page}`
+          );
+          const data = await response.json();
+
+          if (response.ok) {
+            displayHeadlines(data);
+            checkPageNavigation(data);
+          } else {
+            throw new Error(data.error || "Failed to fetch headlines");
+          }
+        } catch (error) {
+          document.getElementById("headlines").innerHTML = `
+                  <div class="error">Error: ${error.message}</div>
+              `;
+        }
+      }
+
+      function checkPageNavigation(headlines) {
+        const nextButton = document.getElementById("nextButton");
+        const prevButton = document.getElementById("prevButton");
+
+        // Disable prev button if on first page
+        prevButton.disabled = currentPage === 1;
+
+        // Check if any article is from after 2022
+        if (headlines.length > 0) {
+          const latestArticleDate = new Date(headlines[0].pubDate);
+          const cutoffDate = new Date("2022-12-31");
+          nextButton.disabled = latestArticleDate < cutoffDate;
+        } else {
+          nextButton.disabled = true;
+        }
+      }
+
+      function displayHeadlines(headlines) {
+        const container = document.getElementById("headlines");
+
+        if (headlines.length === 0) {
+          container.innerHTML =
+            '<div class="error">No headlines found for this page</div>';
+          return;
+        }
+
+        container.innerHTML = headlines
+          .map(
+            (item) => `
+              <div class="article">
+                  <h2>${item.dangerousHed}</h2>
+                  <p>Published: ${new Date(
+                    item.pubDate
+                  ).toLocaleDateString()}</p>
+                  <a href="${item.url}" target="_blank">Read More</a>
+              </div>
+          `
+          )
+          .join("");
+      }
+
+      function updatePage() {
+        document.getElementById("currentPage").textContent = currentPage;
+        fetchHeadlines(currentPage);
+      }
+
+      function nextPage() {
+        if (!document.getElementById("nextButton").disabled) {
+          currentPage++;
+          updatePage();
+        }
+      }
+
+      function prevPage() {
+        if (currentPage > 1) {
+          currentPage--;
+          updatePage();
+        }
+      }
+
+      // Initial load
+      updatePage();
+    </script>
+  </body>
+</html>
