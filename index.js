@@ -5,7 +5,7 @@ const cors = require('cors');
 const https = require('https');
 
 const app = express();
-const PORT = 4200;
+const PORT = 3000;
 
 // Enable CORS
 app.use(cors());

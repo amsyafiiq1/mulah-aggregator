@@ -28,7 +28,7 @@
       async function fetchHeadlines(page) {
         try {
           const response = await fetch(
-            `http://localhost:4200/api/headlines?page=${page}`
+            `http://localhost:3000/api/headlines?page=${page}`
           );
           const data = await response.json();
 
